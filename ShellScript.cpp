@@ -1,6 +1,7 @@
 // C++ Program to run a shell 
 #include <iostream>
-#include "unistd.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 
 // Function required in C++
 void clear() {
@@ -23,6 +24,29 @@ void shell_initialization(){
     std::cout << "\n";
     sleep(3);
     clear();
+}
+
+int readInput(char *str){
+    char *buffer;
+
+    while (true) {
+        // Prompt an input
+        buffer = readline("\n>>> ");
+
+        if (strlen(buffer) != 0){
+            add_history(buffer);
+            strcpy(str, buffer);
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+}
+
+int printDir(){
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    std::cout << "\nDir: " << cwd;
 }
 
 int main() {
