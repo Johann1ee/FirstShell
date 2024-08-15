@@ -8,6 +8,58 @@
 #define LINE_BUFFER 1024
 #define SHELL_DELIM " \t\r\n\a"
 
+// SHELL COMMANDS 
+int shell_cd(char **args);
+int shell_help(char **args);
+int shell_exit(char **args);
+
+char *builtin_str[] = {
+    "cd",
+    "help",
+    "exit",
+};
+
+int (*builtin_func[]) (char **) = {
+    &shell_cd,
+    &shell_help,
+    &shell_exit,
+};
+
+int shell_num_builtin() {
+    return sizeof(builtin_str) / sizeof(char *);
+}
+
+// SHELL COMMAND IMPLEMENTATION
+int shell_cd(char **args){
+    if (args[1] == NULL) {
+        fprintf(stderr, "SHELL: EXPECTED ARGUEMENTT TO \"cd\"\n");
+    } else {
+        if (chdir(args[1]) != 0){
+            perror('lsh');
+        }
+    }
+    return 1;
+}
+
+int shell_help(char **args){
+    int i;
+    printf("Johann Lee's LSH\n");
+    printf("Type program anames and arguements and hit enter.\n");
+    printf("The following are built in:\n");
+
+    for (i = 0; i < shell_num_builtin(); i++){
+        printf(" %s\n", builtin_str[i]);
+    }
+
+    printf("Use the man command for information on other programs.\n");
+    return 1;
+}
+
+int shell_exit(char **args){
+    return 0;
+}
+
+
 char *shell_read_line(void){
     char *line = NULL;
     ssize_t buffer_size = 0;
@@ -78,73 +130,6 @@ int shell_launch(char **args){
     return 1;
 }
 
-void shell_loop(void){
-    char *line; // line given by user through shell input
-    char **args; // split arguments based on line
-    int status; // decides whether the shell should exit or not
-
-    do { // continues to run as long as status is true
-        printf("> ");
-        line = shell_read_line();
-        args = shell_split_line(line);
-        status = shell_execute(args);
-
-        free(line);
-        free(args);
-    } while (status);
-}
-
-// SHELL COMMANDS 
-int shell_cd(char **args);
-int shell_help(char **args);
-int shell_exit(char **args);
-
-char *builtin_str[] = {
-    "cd",
-    "help",
-    "exit",
-};
-
-int (*builtin_func[]) (char **) = {
-    &shell_cd,
-    &shell_help,
-    &shell_exit,
-};
-
-int shell_num_builtin() {
-    return sizeof(builtin_str) / sizeof(char *);
-}
-
-// SHELL COMMAND IMPLEMENTATION
-int shell_cd(char **args){
-    if (args[1] == NULL) {
-        fprintf(stderr, "SHELL: EXPECTED ARGUEMENTT TO \"cd\"\n");
-    } else {
-        if (chdir(args[1]) != 0){
-            perror('lsh');
-        }
-    }
-    return 1;
-}
-
-int shell_help(char **args){
-    int i;
-    printf("Johann Lee's LSH\n");
-    printf("Type program anames and arguements and hit enter.\n");
-    printf("The following are built in:\n");
-
-    for (i = 0; i < shell_num_builtin(); i++){
-        printf(" %s\n", builtin_str[i]);
-    }
-
-    printf("Use the man command for information on other programs.\n");
-    return 1;
-}
-
-int shell_exit(char **args){
-    return 0;
-}
-
 int shell_execute(char **args)
 {
   int i;
@@ -161,6 +146,22 @@ int shell_execute(char **args)
   }
 
   return shell_launch(args);
+}
+
+void shell_loop(void){
+    char *line; // line given by user through shell input
+    char **args; // split arguments based on line
+    int status; // decides whether the shell should exit or not
+
+    do { // continues to run as long as status is true
+        printf("> ");
+        line = shell_read_line();
+        args = shell_split_line(line);
+        status = shell_execute(args);
+
+        free(line);
+        free(args);
+    } while (status);
 }
 
 int main (int argc, char **argv){
