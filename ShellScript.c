@@ -1,46 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #define LINE_BUFFER 1024
 #define SHELL_DELIM " \t\r\n\a"
-
-char *shell_read_line(void){
-    int buffer_size = LINE_BUFFER;
-    int position = 0;
-    char *buffer = malloc(sizeof(char) * buffer_size);
-    int c;
-
-    if (!buffer) {
-        fprintf(stderr, "SHELL: ALLOCATION ERROR\n");
-        exit(EXIT_FAILURE);
-    }
-    
-    while (true)
-    {
-        // read character from input
-        c = getchar();
-
-        // if EOF is reached, replace with NULL character and return
-        if (c == EOF || c == '\n') {
-            buffer[position] = '\0';
-            return buffer;
-        } else {
-            buffer[position] = c;
-        }
-        position++;
-
-        // if buffer is exceeded, reallocate memory
-        if (position >= buffer_size){
-            buffer_size += LINE_BUFFER;
-            buffer = realloc(buffer, buffer_size);
-            if (!buffer){
-                fprintf(stderr, "SHELL: ALLOCATION ERROR\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-}
 
 char *shell_read_line(void){
     char *line = NULL;
@@ -88,6 +54,28 @@ char **shell_split_line(char *line){
     }
     tokens[position] = NULL;
     return tokens;
+}
+
+int shell_launch(char **args){
+    pid_t pid, wpid;
+    int status;
+
+    pid = fork();
+    if (pid == 0) {
+        if (execvp(args[0], args) == -1){
+            perror("lsh");
+        }
+        exit(EXIT_FAILURE);
+    } else if (pid < 0){
+        perror("lsh");
+    } else {
+        do
+        {
+            wpid = waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+    }
+
+    return 1;
 }
 
 void shell_loop(void){
